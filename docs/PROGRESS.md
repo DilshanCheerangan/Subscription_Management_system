@@ -3,8 +3,8 @@
 Agents: read this BEFORE every response. After every response append a new entry at the bottom of the LOG section and tick the checklist.
 
 ## Current status
-- Current phase: Phase 3 (Complete, ready for Phase 4: Subscriptions)
-- Last updated: 2026-10-31 11:48 IST
+- Current phase: Phase 4 (Complete, ready for Phase 5: Billing and Invoices)
+- Last updated: 2026-10-31 12:12 IST
 - Blockers: none
 - Waiting on user: none
 
@@ -36,10 +36,10 @@ Agents: read this BEFORE every response. After every response append a new entry
 - [x] Discount rules CRUD (admin only)
 - [x] Quotation templates CRUD
 ### Phase 4: Subscriptions
-- [ ] Create from scratch and from template
-- [ ] Lines with tax/price calc
-- [ ] State machine + stepper + history
-- [ ] List with filters and pagination
+- [x] Create from scratch and from template
+- [x] Lines with tax/price calc
+- [x] State machine + stepper + history
+- [x] List with filters and pagination
 ### Phase 5: Billing and Invoices
 - [ ] Billing engine (idempotent, catch-up)
 - [ ] Discount auto-application
@@ -393,6 +393,75 @@ Agents: read this BEFORE every response. After every response append a new entry
 - Verification: Lint (0 problems), typecheck (0 errors), build (18 routes compiled successfully).
 - Next: Awaiting Phase 4: Subscriptions prompt.
 - Blockers / manual checkpoint: none
+
+[#15 | Phase 4 | 2026-10-31 12:12 IST]
+- Request: PHASE 4: Subscriptions and lifecycle.
+  1. lib/state-machines/subscription.ts: legal transitions only (DRAFT->QUOTATION->CONFIRMED->ACTIVE->CLOSED, ACTIVE<->PAUSED where plan.pausable, CLOSE early only if plan.closable). Record every transition in SubscriptionStatusHistory with actor and time.
+  2. Auto sequential number SUB-00001 inside a transaction (no duplicates under concurrency).
+  3. /admin/subscriptions list: filters (status, customer, plan, date range), search by number, server pagination, status badges, row actions.
+  4. Create/edit page: customer picker (searchable), plan, startDate, expiryDate, payment term, lines editor (product, variant, quantity >= plan.minQuantity, unit price auto-filled, tax, amount) with live totals computed by a shared server function.
+  5. 'New from template' flow: pick template, lines prefilled, quotation validUntil set from validityDays.
+  6. Detail page: status stepper across the top, action buttons that only show legal next transitions, history timeline, customer panel, lines table, upcoming invoice date.
+  7. autoClose: add lib/jobs/closeExpired.ts closing subscriptions past expiry where plan.autoClose; call it from the billing run.
+  8. Verify full lifecycle. Update PROGRESS.md.
+- Done:
+  - Sequence Generator (`lib/sequence.ts`):
+    - Atomic sequential numbering for `Subscription` (`SUB-00001`) and `Invoice` (`INV-00001`) utilizing raw advisory row-level locking queries within Prisma transactions to guarantee no duplicate numbering under high concurrency.
+  - State Machine Engine (`lib/state-machines/subscription.ts`):
+    - Enforced strict legal transitions: `DRAFT` -> `QUOTATION` -> `CONFIRMED` -> `ACTIVE` -> `CLOSED`.
+    - `ACTIVE` <-> `PAUSED` reversible side-state allowed only when `plan.pausable` is true.
+    - Early `CLOSED` allowed prior to expiry only when `plan.closable` is true; closing past expiry always permitted.
+    - Status history logging with `fromStatus`, `toStatus`, `changedById`, and optional transition `reason`.
+    - Dynamic action resolver `getLegalNextTransitions` providing contextual action labels, variants, and confirmation prompts.
+  - Calculation Engine & Validators (`lib/subscriptions.ts`, `lib/validators/subscription.ts`):
+    - Line-level decimal tax and amount calculations with half-up rounding.
+    - Validation for plan minimum quantities, date ranges, and positive line amounts.
+  - Auto-Close Background Job (`lib/jobs/closeExpired.ts`):
+    - Identifies `ACTIVE` or `PAUSED` subscriptions past `expiryDate` where `plan.autoClose` is true.
+    - Automatically executes transitions to `CLOSED` via state machine with system audit history entries.
+  - Server Actions (`app/actions/subscriptions.ts`):
+    - `getSubscriptionsAction`: Multi-filter search (status, customer, plan, date ranges), server pagination (15/page).
+    - `getSubscriptionDetailAction`: Detailed subscription retrieval with line calculations, audit history, and legal transition actions.
+    - `createSubscriptionAction`: Creates subscriptions or quotations from scratch or templates with atomic numbering.
+    - `updateSubscriptionAction`: Updates draft or quotation subscriptions and recalculates lines and taxes.
+    - `transitionSubscriptionAction`: Transactionally moves subscriptions to next legal state with audit trail logging.
+    - Guarded with `requireRole(["ADMIN", "STAFF"])` and verified user identity via `session.userId`.
+  - UI Components & Pages:
+    - Status Stepper (`components/subscriptions/subscription-status-stepper.tsx`): Visual progress stepper across the primary lifecycle and paused state banner.
+    - Subscription Form (`components/subscriptions/subscription-form.tsx`): Dynamic customer picker, plan selection, template prefilling, variant pricing, and live subtotal/tax/total computation.
+    - Subscriptions Table (`app/(admin)/admin/subscriptions/page.tsx`): Filterable, searchable, paginated table with quick actions and status badges.
+    - New Subscription Page (`app/(admin)/admin/subscriptions/new/page.tsx`): Supports blank and template-prefilled creation.
+    - Detail Page (`app/(admin)/admin/subscriptions/[id]/page.tsx` & `subscription-detail-client.tsx`): Status stepper, dynamic transition buttons, customer metadata, lines table, and audit trail timeline.
+    - Edit Page (`app/(admin)/admin/subscriptions/[id]/edit/page.tsx` & `edit-subscription-client.tsx`): Locked to editable stages (`DRAFT`, `QUOTATION`).
+    - Sidebar (`components/layout/sidebar.tsx`): Upgraded navigation items and wrapped client pathname inside Suspense boundaries.
+  - Test Suite (`scripts/test-subscription-lifecycle.ts`):
+    - Automated lifecycle test verified sequential generation, tax calculation, transition validation, full DB progression, and the autoClose expired background job with exit code 0.
+- Files touched:
+  - lib/sequence.ts
+  - lib/state-machines/subscription.ts
+  - lib/subscriptions.ts
+  - lib/validators/subscription.ts
+  - lib/jobs/closeExpired.ts
+  - app/actions/subscriptions.ts
+  - components/subscriptions/subscription-status-stepper.tsx
+  - components/subscriptions/subscription-form.tsx
+  - components/layout/sidebar.tsx
+  - app/(admin)/admin/subscriptions/page.tsx
+  - app/(admin)/admin/subscriptions/new/page.tsx
+  - app/(admin)/admin/subscriptions/[id]/page.tsx
+  - app/(admin)/admin/subscriptions/[id]/subscription-detail-client.tsx
+  - app/(admin)/admin/subscriptions/[id]/edit/page.tsx
+  - app/(admin)/admin/subscriptions/[id]/edit/edit-subscription-client.tsx
+  - scripts/test-subscription-lifecycle.ts
+  - docs/PROGRESS.md
+- Verification:
+  - `npm run typecheck`: 0 errors.
+  - `npm run lint`: 0 errors, 0 warnings.
+  - `npx tsx scripts/test-subscription-lifecycle.ts`: All 5 test suites passed (Sequential numbering, line totals, transition rules, full DB lifecycle, autoClose job).
+  - `npm run build`: Production build succeeded in 626ms; 22 routes compiled with Partial Prerendering.
+- Next: Awaiting Phase 5: Billing and Invoices prompt.
+- Blockers / manual checkpoint: none
+
 
 
 

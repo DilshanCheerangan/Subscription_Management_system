@@ -1,5 +1,6 @@
 "use client";
 
+import React, { Suspense } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -39,8 +40,8 @@ interface NavItem {
 const navItems: NavItem[] = [
   // Common / Ops
   { label: "Dashboard", href: "/", icon: LayoutDashboard, roles: ["ADMIN", "STAFF"] },
-  { label: "Quotations", href: "/quotations", icon: FileText, roles: ["ADMIN", "STAFF"] },
-  { label: "Subscriptions", href: "/subscriptions", icon: Repeat, roles: ["ADMIN", "STAFF"] },
+  { label: "Quotations", href: "/admin/subscriptions?status=QUOTATION", icon: FileText, roles: ["ADMIN", "STAFF"] },
+  { label: "Subscriptions", href: "/admin/subscriptions", icon: Repeat, roles: ["ADMIN", "STAFF"] },
   { label: "Invoices", href: "/invoices", icon: Receipt, roles: ["ADMIN", "STAFF"] },
   { label: "Payments", href: "/payments", icon: Wallet, roles: ["ADMIN", "STAFF"] },
   { label: "Customers", href: "/customers", icon: Users, roles: ["ADMIN", "STAFF"] },
@@ -62,8 +63,65 @@ const navItems: NavItem[] = [
   { label: "Payment History", href: "/portal/payments", icon: CreditCard, roles: ["CUSTOMER"] },
 ];
 
-export function Sidebar({ role = "ADMIN", userName = "Admin User", userEmail = "admin@brightloop.test" }: SidebarProps) {
+function SidebarNav({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
+
+  return (
+    <nav className="space-y-1">
+      {items.map((item) => {
+        const Icon = item.icon;
+        const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={cn(
+              "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150",
+              isActive
+                ? "bg-indigo-50/80 text-indigo-600 font-semibold shadow-xs"
+                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+            )}
+          >
+            <Icon
+              className={cn(
+                "h-4 w-4 transition-colors",
+                isActive ? "text-indigo-600" : "text-slate-400 group-hover:text-slate-600"
+              )}
+            />
+            <span className="truncate">{item.label}</span>
+            {item.badge && (
+              <span className="ml-auto rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-700">
+                {item.badge}
+              </span>
+            )}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+function SidebarNavFallback({ items }: { items: NavItem[] }) {
+  return (
+    <nav className="space-y-1">
+      {items.map((item) => {
+        const Icon = item.icon;
+        return (
+          <div
+            key={item.href}
+            className="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600"
+          >
+            <Icon className="h-4 w-4 text-slate-400" />
+            <span className="truncate">{item.label}</span>
+          </div>
+        );
+      })}
+    </nav>
+  );
+}
+
+export function Sidebar({ role = "ADMIN", userName = "Admin User", userEmail = "admin@brightloop.test" }: SidebarProps) {
   const visibleItems = navItems.filter((item) => item.roles.includes(role));
 
   return (
@@ -89,38 +147,9 @@ export function Sidebar({ role = "ADMIN", userName = "Admin User", userEmail = "
         <div className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
           {role === "CUSTOMER" ? "Customer Portal" : "Operations"}
         </div>
-        <nav className="space-y-1">
-          {visibleItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150",
-                  isActive
-                    ? "bg-indigo-50/80 text-indigo-600 font-semibold shadow-xs"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                )}
-              >
-                <Icon
-                  className={cn(
-                    "h-4 w-4 transition-colors",
-                    isActive ? "text-indigo-600" : "text-slate-400 group-hover:text-slate-600"
-                  )}
-                />
-                <span className="truncate">{item.label}</span>
-                {item.badge && (
-                  <span className="ml-auto rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-700">
-                    {item.badge}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </nav>
+        <Suspense fallback={<SidebarNavFallback items={visibleItems} />}>
+          <SidebarNav items={visibleItems} />
+        </Suspense>
       </div>
 
       {/* User profile footer */}
