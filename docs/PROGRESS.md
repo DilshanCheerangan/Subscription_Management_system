@@ -311,5 +311,18 @@ Agents: read this BEFORE every response. After every response append a new entry
 - Next: Awaiting Phase 3: Taxes, Discounts, Templates prompt.
 - Blockers / manual checkpoint: none
 
+[#12 | Protocol Update | 2026-10-31 11:24 IST]
+- Request: Omit browser navigation / subagent testing moving forward to accelerate delivery; rely on CLI checks and prompt user for any needed verifications.
+- Done:
+  - Acknowledged and adopted rule: browser subagent navigation is disabled.
+  - Fast CLI checks (`npm run lint`, `npm run typecheck`, `npm run build`, automated script tests) will remain the sole automated gate.
+  - Any required visual checkpoints will be outlined clearly for the user to review.
+- Files touched:
+  - docs/PROGRESS.md
+- Verification: Operating rule updated; working tree clean.
+- Next: Awaiting Phase 3: Taxes, Discounts, Templates prompt.
+- Blockers / manual checkpoint: none
+
+
 
 
