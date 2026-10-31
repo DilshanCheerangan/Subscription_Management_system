@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/ui/page-header";
 import { PasswordRulesChecklist } from "@/components/auth/password-rules-checklist";
 import { createStaffAction, getStaffListAction } from "@/app/actions/staff";
@@ -92,7 +91,7 @@ export default function AdminStaffPage() {
   };
 
   return (
-    <AppShell role="ADMIN" userName="System Administrator" userEmail="admin@brightloop.test">
+    <div className="space-y-6">
       <PageHeader
         title="Staff Access Management"
         description="Admin-only directory for managing Brightloop internal operators and permissions."
@@ -278,6 +277,6 @@ export default function AdminStaffPage() {
           </div>
         </div>
       )}
-    </AppShell>
+    </div>
   );
 }

@@ -10,6 +10,7 @@ import {
   Wallet,
   Users,
   Package,
+  Layers,
   Percent,
   PlayCircle,
   BarChart3,
@@ -44,12 +45,13 @@ const navItems: NavItem[] = [
   { label: "Payments", href: "/payments", icon: Wallet, roles: ["ADMIN", "STAFF"] },
   { label: "Customers", href: "/customers", icon: Users, roles: ["ADMIN", "STAFF"] },
   
-  // Admin-only catalog & config
-  { label: "Products & Plans", href: "/catalog", icon: Package, roles: ["ADMIN"] },
-  { label: "Taxes & Discounts", href: "/rules", icon: Percent, roles: ["ADMIN"] },
-  { label: "Billing Engine", href: "/billing-run", icon: PlayCircle, roles: ["ADMIN", "STAFF"] },
-  { label: "Reports & MRR", href: "/reports", icon: BarChart3, roles: ["ADMIN", "STAFF"] },
-  { label: "Staff Access", href: "/staff", icon: ShieldCheck, roles: ["ADMIN"] },
+  // Catalog & Configuration
+  { label: "Products", href: "/admin/products", icon: Package, roles: ["ADMIN", "STAFF"] },
+  { label: "Plans", href: "/admin/plans", icon: Layers, roles: ["ADMIN", "STAFF"] },
+  { label: "Taxes & Discounts", href: "/admin/rules", icon: Percent, roles: ["ADMIN"] },
+  { label: "Billing Engine", href: "/admin/billing-run", icon: PlayCircle, roles: ["ADMIN", "STAFF"] },
+  { label: "Reports & MRR", href: "/admin/reports", icon: BarChart3, roles: ["ADMIN", "STAFF"] },
+  { label: "Staff Access", href: "/admin/staff", icon: ShieldCheck, roles: ["ADMIN"] },
 
   // Customer Portal
   { label: "My Subscriptions", href: "/portal/subscriptions", icon: Repeat, roles: ["CUSTOMER"] },

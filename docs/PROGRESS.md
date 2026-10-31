@@ -28,8 +28,8 @@ Agents: read this BEFORE every response. After every response append a new entry
 - [x] RBAC helpers + admin-only staff creation
 - [x] Seed admin user
 ### Phase 2: Catalog
-- [ ] Products CRUD + variants
-- [ ] Plans CRUD + flags + availability dates
+- [x] Products CRUD + variants
+- [x] Plans CRUD + flags + availability dates
 ### Phase 3: Taxes, Discounts, Templates
 - [ ] Tax rules CRUD
 - [ ] Payment terms CRUD
@@ -265,5 +265,51 @@ Agents: read this BEFORE every response. After every response append a new entry
 - Verification: `npm run test:mail` returned exit code 0; test email visible in Mailtrap inbox.
 - Next: Awaiting Phase 2: Catalog prompt (Products, Variants, Plans, Flags).
 - Blockers / manual checkpoint: none
+
+[#11 | Phase 2 | 2026-10-31 11:22 IST]
+- Request: Implement Phase 2: Products, variants and plans (ADMIN only for writes; STAFF read-only).
+- Done:
+  - Created Zod validation schemas (`lib/validators/catalog.ts`) for Products, Variants, and Plans with `availableTo > availableFrom` date refinement.
+  - Built `app/actions/products.ts` with paginated retrieval, search, type filtering, margin calculation, variant synchronization, and `requireRole(["ADMIN"])` mutation protection.
+  - Built `app/actions/plans.ts` with pagination, billing cycle filtering, product linking, flag persistence, and `requireRole(["ADMIN"])` guard.
+  - Implemented `lib/catalog.ts` containing the synchronous `derivePlanStatus` calculation (`Upcoming`, `Available`, `Ended`).
+  - Created reusable UI components:
+    - `components/ui/sheet.tsx`: Slide-over drawer with backdrop, responsive sizing, and accessible keyboard dismissal.
+    - `components/catalog/plan-status-badge.tsx`: Consistent status pill badges with distinct colors (Upcoming=blue, Available=emerald, Ended=slate).
+    - `components/catalog/product-form-sheet.tsx`: Product editor with live margin indicator, dynamic variant builder, and customer-facing effective price preview.
+    - `components/catalog/plan-form-sheet.tsx`: Plan editor with instant date ordering validation and the four required lifecycle switches (`autoClose`, `closable`, `pausable`, `renewable`).
+    - `components/dashboard/dashboard-content.tsx`: Extracted dashboard view for reusability.
+  - Built responsive data table pages:
+    - `app/(admin)/admin/products/page.tsx`: Search, type filter, status filter, margin indicators, variants count, pagination, and role-aware action controls.
+    - `app/(admin)/admin/plans/page.tsx`: Search, billing cycle filter, linked product references, derived status badge, lifecycle flag tags, pagination, and role-aware action controls.
+  - Unified app navigation & RBAC:
+    - Created `app/(admin)/layout.tsx` wrapping all admin pages in `AppShell` with Next.js Partial Prerendering `<Suspense>` boundary.
+    - Updated `components/layout/sidebar.tsx` with dedicated `/admin/products` and `/admin/plans` links visible to both ADMIN and STAFF.
+    - Added Read-Only banner for STAFF users; hidden and server-blocked all write/edit/delete actions when logged in as STAFF.
+  - Verified end-to-end functionality, calculations, date validation, and status derivations with automated integration tests.
+  - Verified `npm run lint` (0 errors, 0 warnings), `npm run typecheck` (0 errors), and `npm run build` (14 routes cleanly compiled).
+- Files touched:
+  - lib/validators/catalog.ts
+  - lib/catalog.ts
+  - app/actions/products.ts
+  - app/actions/plans.ts
+  - components/ui/sheet.tsx
+  - components/catalog/plan-status-badge.tsx
+  - components/catalog/product-form-sheet.tsx
+  - components/catalog/plan-form-sheet.tsx
+  - components/dashboard/dashboard-content.tsx
+  - components/layout/sidebar.tsx
+  - app/(admin)/layout.tsx
+  - app/(admin)/admin/page.tsx
+  - app/(admin)/admin/staff/page.tsx
+  - app/(admin)/admin/products/page.tsx
+  - app/(admin)/admin/plans/page.tsx
+  - app/api/auth/me/route.ts
+  - app/page.tsx
+  - docs/PROGRESS.md
+- Verification: Lint (0 problems), typecheck (0 errors), build (14 routes succeeded in 369ms).
+- Next: Awaiting Phase 3: Taxes, Discounts, Templates prompt.
+- Blockers / manual checkpoint: none
+
 
 
