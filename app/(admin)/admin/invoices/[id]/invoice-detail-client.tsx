@@ -26,6 +26,7 @@ import {
   AlertTriangle,
   Loader2,
 } from "lucide-react";
+import { RecordPaymentDialog } from "@/components/invoices/record-payment-dialog";
 
 interface InvoiceLineItem {
   id: string;
@@ -104,6 +105,7 @@ export function InvoiceDetailClient({ id }: { id: string }) {
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
 
   const loadInvoice = useCallback(() => {
     getInvoiceDetailAction(id).then((res) => {
@@ -231,6 +233,18 @@ export function InvoiceDetailClient({ id }: { id: string }) {
             <Printer className="h-3.5 w-3.5 text-slate-400" />
             Print Invoice
           </Link>
+
+          {data.actions.canRecordPayment && (
+            <button
+              type="button"
+              disabled={actionLoading}
+              onClick={() => setIsPaymentDialogOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-md text-xs font-semibold hover:bg-emerald-700 shadow-2xs transition-colors"
+            >
+              <CreditCard className="h-3.5 w-3.5" />
+              Record Payment
+            </button>
+          )}
 
           {data.actions.canCancel && (
             <button
@@ -414,35 +428,84 @@ export function InvoiceDetailClient({ id }: { id: string }) {
             </div>
           </div>
 
-          {/* Payment History Card (Phase 6 Placeholder/Table) */}
+          {/* Payment History Card with Running Balance */}
           <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs space-y-4">
-            <h2 className="text-base font-semibold text-slate-900 flex items-center gap-2">
-              <CreditCard className="h-4 w-4 text-indigo-600" />
-              Recorded Payments ({data.payments.length})
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-semibold text-slate-900 flex items-center gap-2">
+                <CreditCard className="h-4 w-4 text-indigo-600" />
+                Payment History ({data.payments.length})
+              </h2>
+              {data.actions.canRecordPayment && (
+                <button
+                  type="button"
+                  onClick={() => setIsPaymentDialogOpen(true)}
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:underline"
+                >
+                  + Record Payment
+                </button>
+              )}
+            </div>
 
             {data.payments.length === 0 ? (
               <div className="py-6 text-center text-slate-400 text-xs italic bg-slate-50 rounded-lg border border-dashed border-slate-200">
-                No payments recorded yet. Payments will be registered in Phase 6.
+                No payments recorded yet. Invoice balance is {formatCurrency(data.balance)}.
               </div>
             ) : (
-              <div className="space-y-2">
-                {data.payments.map((p) => (
-                  <div
-                    key={p.id}
-                    className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs"
-                  >
-                    <div>
-                      <span className="font-semibold text-slate-900">{formatCurrency(p.amount)}</span>
-                      <span className="text-slate-500 block text-[11px]">
-                        Method: {p.method} • Date: {new Date(p.paymentDate).toLocaleDateString()}
-                      </span>
-                      {p.note && <span className="text-slate-400 italic block mt-0.5">{p.note}</span>}
-                    </div>
-                    <span className="text-slate-400 text-[11px]">by {p.recordedByName}</span>
+              (() => {
+                // Compute running balances chronologically
+                const chronological = [...data.payments].sort(
+                  (a, b) => new Date(a.paymentDate).getTime() - new Date(b.paymentDate).getTime()
+                );
+                let accumulated = 0;
+                const paymentsWithBalance = chronological.map((p) => {
+                  accumulated += p.amount;
+                  const runningBal = Math.max(0, data.total - accumulated);
+                  return { ...p, runningBalance: runningBal };
+                });
+
+                return (
+                  <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-200 text-slate-500 bg-slate-50">
+                          <th className="py-2.5 px-3 font-semibold">Date</th>
+                          <th className="py-2.5 px-3 font-semibold">Method</th>
+                          <th className="py-2.5 px-3 font-semibold text-right">Amount</th>
+                          <th className="py-2.5 px-3 font-semibold text-right">Running Balance</th>
+                          <th className="py-2.5 px-3 font-semibold">Recorded By</th>
+                          <th className="py-2.5 px-3 font-semibold">Note</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 bg-white">
+                        {paymentsWithBalance.map((p) => (
+                          <tr key={p.id} className="hover:bg-slate-50/50">
+                            <td className="py-2.5 px-3 text-slate-700 font-medium whitespace-nowrap">
+                              {new Date(p.paymentDate).toLocaleDateString()}
+                            </td>
+                            <td className="py-2.5 px-3">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700">
+                                {p.method.replace("_", " ")}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-3 text-right font-semibold text-emerald-600 whitespace-nowrap">
+                              {formatCurrency(p.amount)}
+                            </td>
+                            <td className="py-2.5 px-3 text-right font-medium text-slate-900 whitespace-nowrap">
+                              {formatCurrency(p.runningBalance)}
+                            </td>
+                            <td className="py-2.5 px-3 text-slate-500 text-[11px] whitespace-nowrap">
+                              {p.recordedByName}
+                            </td>
+                            <td className="py-2.5 px-3 text-slate-400 italic text-[11px] max-w-xs truncate">
+                              {p.note || "-"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                ))}
-              </div>
+                );
+              })()
             )}
           </div>
         </div>
@@ -523,6 +586,21 @@ export function InvoiceDetailClient({ id }: { id: string }) {
           </div>
         </div>
       </div>
+
+      {/* Record Payment Modal Dialog */}
+      <RecordPaymentDialog
+        isOpen={isPaymentDialogOpen}
+        onClose={() => setIsPaymentDialogOpen(false)}
+        onSuccess={() => {
+          setMessage({ type: "success", text: "Payment recorded successfully!" });
+          loadInvoice();
+          router.refresh();
+        }}
+        invoiceId={data.id}
+        invoiceNumber={data.number}
+        balance={data.balance}
+        total={data.total}
+      />
     </div>
   );
 }

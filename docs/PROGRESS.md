@@ -3,8 +3,8 @@
 Agents: read this BEFORE every response. After every response append a new entry at the bottom of the LOG section and tick the checklist.
 
 ## Current status
-- Current phase: Phase 5 (Complete, ready for Phase 6: Payments and Customer Portal)
-- Last updated: 2026-10-31 12:37 IST
+- Current phase: Phase 6 (Complete, ready for Phase 7: Reporting and Performance)
+- Last updated: 2026-10-31 13:25 IST
 - Blockers: none
 - Waiting on user: none
 
@@ -14,6 +14,7 @@ Agents: read this BEFORE every response. After every response append a new entry
 3. Advance billing model: Subscriptions bill in advance on `startDate` for the upcoming period `[periodStart, periodEnd]`, setting `nextInvoiceDate` accordingly.
 4. Discount precedence: Product-level discounts apply to matching lines first, then subscription-wide discounts apply to the resulting subtotal; total cannot fall below zero.
 5. Workspace root resolution: Scaffold initialized at repository root `d:/Projects/Makeaton` with `.env.example` tracked and `.env.local` secured.
+6. Customer isolation enforcement: Enforced via triple layer: middleware session guard, server-side customer ID validation rejecting foreign ID queries with `notFound: true`, and App Router server components returning HTTP 404 (`notFound()`).
 
 ## Phase checklist
 ### Phase 0: Scaffold
@@ -46,9 +47,9 @@ Agents: read this BEFORE every response. After every response append a new entry
 - [x] Invoice list/detail, confirm/cancel/send/print
 - [x] Billing run UI + secured cron endpoint
 ### Phase 6: Payments and Portal
-- [ ] Record payments, auto-mark Paid
-- [ ] Paid/outstanding/overdue views
-- [ ] Customer portal (subscriptions, invoices, manage)
+- [x] Record payments, auto-mark Paid
+- [x] Paid/outstanding/overdue views
+- [x] Customer portal (subscriptions, invoices, manage)
 ### Phase 7: Reporting and Performance
 - [ ] Finance dashboard with filters
 - [ ] Indexes + query tuning, pages < 2s
@@ -526,6 +527,76 @@ Agents: read this BEFORE every response. After every response append a new entry
   - `npm run build`: Production build succeeded in 1.7s (all 27 routes compiled cleanly with Partial Prerendering).
 - Next: Awaiting Phase 6: Payments and Customer Portal prompt.
 - Blockers / manual checkpoint: none
+
+[#17 | Configuration | 2026-10-31 12:49 IST]
+- Request: Check who will be credited for the next git commit or push.
+- Done:
+  - Inspected repository git config:
+    - `user.name`: DilshanCheerangan
+    - `user.email`: dilshanmhd.wayanad@gmail.com
+  - Verified recent commit `693fc52` author metadata: `DilshanCheerangan <dilshanmhd.wayanad@gmail.com>`.
+  - Confirmed GitHub will attribute all future commits to the account associated with `dilshanmhd.wayanad@gmail.com`.
+- Files touched:
+  - docs/PROGRESS.md
+[#18 | Phase 6 | 2026-10-31 13:25 IST]
+- Request: Phase 6: Payments and Customer Portal.
+  1. Record payment dialog on invoice detail: method, amount (default=balance, cannot exceed balance), date, note. Transaction: insert payment, recompute paid sum, set invoice PAID when fully paid. Invoice must be CONFIRMED to accept payments.
+  2. Payment history table on invoice detail with running balance. /admin/payments list with filters (method, date range, customer) and pagination.
+  3. Invoice list quick filters: All, Outstanding, Paid, Overdue (derived), each with count chips and amount due column.
+  4. Customer portal under /portal: dashboard (my active subscriptions, next billing date, amount due), My Subscriptions (list + detail with allowed actions only: pause, renew, close per plan flags), My Invoices (list + detail + print), clear paid/outstanding/overdue badges.
+  5. Prove isolation: customer cannot open another customer's subscription or invoice by URL (returns 404). Add a test for this.
+  6. Update PROGRESS.md.
+- Done:
+  - Payments Transaction Engine & Modal:
+    - Built `recordPaymentAction` in `app/actions/payments.ts`: guards `invoice.status === CONFIRMED`, validates amount <= balance, creates `Payment` record, recalculates total payments sum, and automatically transitions status to `PAID` inside a single atomic transaction.
+    - Built `RecordPaymentDialog` in `components/invoices/record-payment-dialog.tsx`: method picker (CASH, BANK_TRANSFER, CARD, UPI, CHEQUE, OTHER), amount auto-fill with balance limit, date, and note.
+    - Updated `app/(admin)/admin/invoices/[id]/invoice-detail-client.tsx`: Record Payment action button and chronological payment history table with running balance column.
+  - Admin Payments List (`/admin/payments`):
+    - Created `app/(admin)/admin/payments/page.tsx` with search, method filter, customer dropdown filter, date range pickers, server pagination (20/page), and page total summary.
+    - Added Payments navigation item in `components/layout/sidebar.tsx`.
+  - Invoices List Quick Filters & Amount Due:
+    - Updated `app/actions/invoices.ts` and `app/(admin)/admin/invoices/page.tsx` with quick filter chips: All, Outstanding, Paid, Overdue with live count badges and renamed balance column to "Amount Due".
+  - Customer Portal (`/portal`):
+    - Created customer layout `app/(portal)/layout.tsx` binding customer session.
+    - Built Dashboard (`app/(portal)/portal/page.tsx`): live metrics for Active Subscriptions, Next Billing Date, and Amount Due, plus recent subscriptions and recent invoices tables.
+    - Built My Subscriptions (`app/(portal)/portal/subscriptions/page.tsx` and `app/(portal)/portal/subscriptions/[id]/page.tsx`): contract stepper, lines breakdown, and allowed actions only (Pause, Resume, Close, Renew) respecting plan policy flags.
+    - Built My Invoices (`app/(portal)/portal/invoices/page.tsx`, `[id]/page.tsx`, `[id]/print/page.tsx`): clear Paid/Outstanding/Overdue badges, line items, and print stylesheet.
+  - Multi-Tenant Customer Isolation Proof:
+    - Enforced isolation across all portal queries and mutations in `app/actions/portal.ts`: rejecting queries where `customerId !== session.userId` with `notFound: true`.
+    - Server dynamic route wrappers unwrap params inside `<Suspense>` boundaries and invoke Next.js `notFound()` (HTTP 404) when a customer attempts to access another tenant's records by URL.
+    - Created `test/portal-isolation.test.ts` (5 Vitest isolation tests verifying 404 for subscription, invoice, and lifecycle mutations).
+    - Created `scripts/test-portal-isolation.ts` verifying partial payments, full settlement auto-mark PAID, and direct cross-tenant access denial against live Postgres.
+- Files touched:
+  - app/actions/payments.ts
+  - app/actions/portal.ts
+  - app/actions/invoices.ts
+  - components/invoices/record-payment-dialog.tsx
+  - components/layout/sidebar.tsx
+  - app/(admin)/admin/invoices/[id]/invoice-detail-client.tsx
+  - app/(admin)/admin/invoices/page.tsx
+  - app/(admin)/admin/payments/page.tsx
+  - app/(portal)/layout.tsx
+  - app/(portal)/portal/page.tsx
+  - app/(portal)/portal/subscriptions/page.tsx
+  - app/(portal)/portal/subscriptions/[id]/page.tsx
+  - app/(portal)/portal/subscriptions/[id]/portal-subscription-client.tsx
+  - app/(portal)/portal/invoices/page.tsx
+  - app/(portal)/portal/invoices/[id]/page.tsx
+  - app/(portal)/portal/invoices/[id]/portal-invoice-client.tsx
+  - app/(portal)/portal/invoices/[id]/print/page.tsx
+  - test/portal-isolation.test.ts
+  - scripts/test-portal-isolation.ts
+  - docs/PROGRESS.md
+- Verification:
+  - `npm test`: 17/17 tests passing (tax engine + discount engine + portal customer isolation).
+  - `npx tsx scripts/test-portal-isolation.ts`: Verified partial payment (UPI ₹1,545), final settlement (Bank Transfer ₹1,545), automatic status transition to `PAID`, and cross-customer query access denial against Postgres.
+  - `npm run typecheck`: 0 errors.
+  - `npm run lint`: 0 problems (0 errors, 0 warnings).
+  - `npm run build`: Production build succeeded in 0.9s (all 33 routes statically prerendered with partial streaming).
+- Next: Awaiting Phase 7: Reporting and Performance prompt.
+- Blockers / manual checkpoint: none
+
+
 
 
 

@@ -11,7 +11,7 @@ import { formatCurrency } from "@/lib/format";
 
 export interface InvoiceFilterParams {
   search?: string;
-  status?: InvoiceStatus | "ALL" | "OVERDUE";
+  status?: InvoiceStatus | "ALL" | "OVERDUE" | "OUTSTANDING";
   customerId?: string;
   dateFrom?: string;
   dateTo?: string;
@@ -45,13 +45,21 @@ export async function getInvoicesAction(params: InvoiceFilterParams = {}) {
       where.customerId = customerId;
     }
 
-    // Status / Overdue Filter
+    // Base where for counts
+    const baseWhere: Prisma.InvoiceWhereInput = {};
+    if (session.role === "CUSTOMER") {
+      baseWhere.customerId = session.userId;
+    } else if (customerId && customerId !== "ALL") {
+      baseWhere.customerId = customerId;
+    }
+
+    // Status / Overdue / Outstanding Filter
     const today = new Date();
     if (status === "OVERDUE") {
       where.status = InvoiceStatus.CONFIRMED;
       where.dueDate = { lt: today };
-      // Balance must be > 0: total > amountPaid
-      where.amountPaid = { lt: prisma.invoice.fields.total };
+    } else if (status === "OUTSTANDING") {
+      where.status = InvoiceStatus.CONFIRMED;
     } else if (status && status !== "ALL") {
       where.status = status;
     }
@@ -73,7 +81,20 @@ export async function getInvoicesAction(params: InvoiceFilterParams = {}) {
       if (dateTo) where.periodStart.lte = new Date(dateTo);
     }
 
-    const total = await prisma.invoice.count({ where });
+    // Compute Quick Filter Counts across the scope
+    const [allCount, outstandingCount, paidCount, overdueCount, total] = await Promise.all([
+      prisma.invoice.count({ where: baseWhere }),
+      prisma.invoice.count({ where: { ...baseWhere, status: InvoiceStatus.CONFIRMED } }),
+      prisma.invoice.count({ where: { ...baseWhere, status: InvoiceStatus.PAID } }),
+      prisma.invoice.count({
+        where: {
+          ...baseWhere,
+          status: InvoiceStatus.CONFIRMED,
+          dueDate: { lt: today },
+        },
+      }),
+      prisma.invoice.count({ where }),
+    ]);
 
     const invoices = await prisma.invoice.findMany({
       where,
@@ -137,6 +158,12 @@ export async function getInvoicesAction(params: InvoiceFilterParams = {}) {
         page,
         limit,
         totalPages: Math.ceil(total / limit) || 1,
+        counts: {
+          all: allCount,
+          outstanding: outstandingCount,
+          paid: paidCount,
+          overdue: overdueCount,
+        },
       },
     };
   } catch (error: unknown) {

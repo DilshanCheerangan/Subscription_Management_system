@@ -65,9 +65,15 @@ export default function InvoicesListPage() {
 
   // Filters
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<InvoiceStatus | "ALL" | "OVERDUE">("ALL");
+  const [statusFilter, setStatusFilter] = useState<InvoiceStatus | "ALL" | "OVERDUE" | "OUTSTANDING">("ALL");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [counts, setCounts] = useState<{
+    all: number;
+    outstanding: number;
+    paid: number;
+    overdue: number;
+  }>({ all: 0, outstanding: 0, paid: 0, overdue: 0 });
 
   // Action states
   const [activeDropdownId, setActiveDropdownId] = useState<string | null>(null);
@@ -92,6 +98,9 @@ export default function InvoicesListPage() {
           setInvoices(res.data.invoices);
           setTotal(res.data.total);
           setTotalPages(res.data.totalPages);
+          if (res.data.counts) {
+            setCounts(res.data.counts);
+          }
         } else {
           setMessage({ type: "error", text: res.error || "Failed to load invoices" });
         }
@@ -194,6 +203,43 @@ export default function InvoicesListPage() {
         </div>
       )}
 
+      {/* Quick Filter Tabs with Live Count Chips */}
+      <div className="flex flex-wrap items-center gap-2">
+        {[
+          { label: "All", value: "ALL", count: counts.all, badgeClass: "bg-slate-100 text-slate-700" },
+          { label: "Outstanding", value: "OUTSTANDING", count: counts.outstanding, badgeClass: "bg-amber-100 text-amber-800" },
+          { label: "Paid", value: "PAID", count: counts.paid, badgeClass: "bg-emerald-100 text-emerald-800" },
+          { label: "Overdue", value: "OVERDUE", count: counts.overdue, badgeClass: "bg-rose-100 text-rose-800" },
+        ].map((tab) => {
+          const isSelected = statusFilter === tab.value;
+          return (
+            <button
+              key={tab.value}
+              type="button"
+              onClick={() => {
+                setStatusFilter(tab.value as InvoiceStatus | "ALL" | "OVERDUE" | "OUTSTANDING");
+                setPage(1);
+                setLoading(true);
+              }}
+              className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-2xs ${
+                isSelected
+                  ? "bg-slate-900 text-white shadow-xs"
+                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              <span>{tab.label}</span>
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                  isSelected ? "bg-slate-700 text-white" : tab.badgeClass
+                }`}
+              >
+                {tab.count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Filter and Search Bar */}
       <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs space-y-3">
         <form onSubmit={handleSearchSubmit} className="flex flex-col md:flex-row gap-3">
@@ -214,12 +260,13 @@ export default function InvoicesListPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => {
-                  setStatusFilter(e.target.value as InvoiceStatus | "ALL" | "OVERDUE");
+                  setStatusFilter(e.target.value as InvoiceStatus | "ALL" | "OVERDUE" | "OUTSTANDING");
                   setPage(1);
                 }}
                 className="bg-transparent text-xs font-medium text-slate-700 focus:outline-hidden"
               >
                 <option value="ALL">All Statuses</option>
+                <option value="OUTSTANDING">Outstanding</option>
                 <option value="DRAFT">Draft</option>
                 <option value="CONFIRMED">Confirmed</option>
                 <option value="OVERDUE">Overdue (Derived)</option>
@@ -269,7 +316,7 @@ export default function InvoicesListPage() {
                 <th className="px-4 py-3">Period</th>
                 <th className="px-4 py-3">Due Date</th>
                 <th className="px-4 py-3 text-right">Total</th>
-                <th className="px-4 py-3 text-right">Balance</th>
+                <th className="px-4 py-3 text-right">Amount Due</th>
                 <th className="px-4 py-3 text-center">Status</th>
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
