@@ -1,36 +1,27 @@
 import React, { Suspense } from "react";
-import { AppShell } from "@/components/layout/app-shell";
-import { DashboardContent } from "@/components/dashboard/dashboard-content";
+import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth";
 
-async function HomeWithUser() {
+async function HomeRedirectContent(): Promise<React.ReactNode> {
   const user = await getSessionUser();
 
-  return (
-    <AppShell
-      role={user?.role || "ADMIN"}
-      userName={user?.name || "System Administrator"}
-      userEmail={user?.email || "admin@brightloop.test"}
-    >
-      <DashboardContent />
-    </AppShell>
-  );
+  if (!user) {
+    redirect("/login");
+  }
+
+  if (user.role === "CUSTOMER") {
+    redirect("/portal");
+  }
+
+  // ADMIN and STAFF default landing per Phase 7
+  redirect("/admin/reports");
+  return null;
 }
 
 export default function HomePage() {
   return (
-    <Suspense
-      fallback={
-        <AppShell
-          role="ADMIN"
-          userName="Loading..."
-          userEmail="admin@brightloop.test"
-        >
-          <DashboardContent />
-        </AppShell>
-      }
-    >
-      <HomeWithUser />
+    <Suspense fallback={null}>
+      <HomeRedirectContent />
     </Suspense>
   );
 }

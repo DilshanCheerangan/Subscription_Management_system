@@ -39,7 +39,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   // Common / Ops
-  { label: "Dashboard", href: "/", icon: LayoutDashboard, roles: ["ADMIN", "STAFF"] },
+  { label: "Dashboard", href: "/admin/reports", icon: LayoutDashboard, roles: ["ADMIN", "STAFF"] },
   { label: "Quotations", href: "/admin/subscriptions?status=QUOTATION", icon: FileText, roles: ["ADMIN", "STAFF"] },
   { label: "Subscriptions", href: "/admin/subscriptions", icon: Repeat, roles: ["ADMIN", "STAFF"] },
   { label: "Invoices", href: "/admin/invoices", icon: Receipt, roles: ["ADMIN", "STAFF"] },

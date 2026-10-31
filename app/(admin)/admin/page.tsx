@@ -1,5 +1,5 @@
-import { DashboardContent } from "@/components/dashboard/dashboard-content";
+import { redirect } from "next/navigation";
 
-export default function AdminPage() {
-  return <DashboardContent />;
+export default function AdminIndexPage() {
+  redirect("/admin/reports");
 }

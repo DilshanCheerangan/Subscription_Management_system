@@ -83,7 +83,7 @@ export async function middleware(request: NextRequest) {
     if (user.role === "CUSTOMER") {
       return NextResponse.redirect(new URL("/portal", request.url));
     } else {
-      return NextResponse.redirect(new URL("/admin", request.url));
+      return NextResponse.redirect(new URL("/admin/reports", request.url));
     }
   }
 
