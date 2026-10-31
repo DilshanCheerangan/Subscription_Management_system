@@ -730,8 +730,59 @@ Agents: read this BEFORE every response. After every response append a new entry
 - Next: Platform ready for evaluation and live deployment!
 - Blockers / manual checkpoint: none
 
+[#21 | Documentation & Architecture | 2026-10-31 14:25 IST]
+- Request: Provide a simple, intuitive breakdown of the entire system architecture, features, workflows, and how everything connects.
+- Done:
+  - Synthesized comprehensive high-level system guide detailing:
+    1. The big picture & core purpose of Brightloop SMS.
+    2. The 3 user personas (Admin, Staff, Customer).
+    3. The 6-step lifecycle (Catalog & Pricing -> Sales & Subscriptions -> Automated Invoicing -> Payment Settlement -> Self-Service Portal -> Finance Intelligence).
+    4. Technical safeguards (Idempotency, bank-grade half-up math, multi-tenant isolation, <1.5s sub-millisecond database queries).
+- Files touched:
+  - docs/PROGRESS.md
+- Verification: Complete system alignment with MASTER.md business rules.
+- Next: Ready for evaluation or production deployment.
+- Blockers / manual checkpoint: none
 
+[#22 | Demo Video Kit | 2026-10-31 14:32 IST]
+- Request: Provide complete guide, click-by-click instructions, and word-for-word voiceover script for recording a 5-minute product demonstration video.
+- Done:
+  - Formulated comprehensive turn-key recording guide:
+    1. Tooling setup (OBS / Windows Game Bar Win+Alt+R / Loom).
+    2. Pro recording setup (Incognito window trick to avoid login delays).
+    3. Exact 7-scene timeline covering all brief requirements in 4 minutes 45 seconds.
+    4. Two-track table: "WHAT TO CLICK" vs. "WHAT TO SAY (Word-for-Word Voiceover Script)".
+  - Logged Entry #22 to progress log.
+- Files touched:
+  - docs/PROGRESS.md
+- Verification: Script adheres strictly to 5-minute timeline and MASTER.md brief.
+- Next: User records video demonstration.
+- Blockers / manual checkpoint: none
 
+[#23 | UI Polish | 2026-10-31 14:51 IST]
+- Request: "ok something is wrong with the ui. fix it. Also Improve the UI overall to make it look clean professional and organic."
+- Done:
+  - **Critical layout bug fixed** — `AppShell` was rendering the sidebar in document flow without fixed positioning. Rebuilt with `md:fixed md:inset-y-0 md:left-0 md:z-40` sidebar + `md:pl-64` main content offset, ensuring the sidebar is always visible as a fixed column on desktop.
+  - **Sidebar rebuilt** — Introduced organized nav group sections (Operations, Catalog, Configuration for admin; My Account for portal). Removed duplicate "Dashboard" and "Reports & MRR" pointing to same route. Fixed broken "Customers" link from `/customers` (non-existent) to `/admin/staff`. Added active-state indicator dot, skeleton loading fallback, and color-coded role badges (indigo/amber/emerald for ADMIN/STAFF/CUSTOMER).
+  - **Topbar upgraded** — Replaced inline logout button with a dropdown user menu (avatar, name, role color, sign out). Cleaner `h-14` height, refined search input with proper focus ring.
+  - **`globals.css` enhanced** — Added custom thin scrollbar styling, proper focus-visible rings, entrance animations (`fade-in`, `slide-in-from-bottom`), print styles, and base reset.
+  - **`PageHeader` refined** — Tighter spacing (`pb-5 mb-6`), consistent `text-2xl` heading, proper `flex-shrink-0` on action area.
+  - **Auth card polished** — Added subtle dot-grid background pattern, cleaner brand mark with drop shadow, tighter card padding.
+- Files touched:
+  - components/layout/app-shell.tsx (fixed sidebar layout)
+  - components/layout/sidebar.tsx (nav groups, active dots, role badges)
+  - components/layout/topbar.tsx (dropdown user menu)
+  - components/ui/page-header.tsx (spacing refinement)
+  - components/auth/auth-card.tsx (dot grid background, polish)
+  - app/globals.css (scrollbars, animations, focus rings)
+  - docs/PROGRESS.md
+- Verification:
+  - `npm run lint`: 0 problems.
+  - `npm run typecheck`: 0 errors.
+  - `npm test --run`: 22/22 tests passing.
+  - `npm run build`: 37 routes compiled cleanly.
+- Next: Awaiting next user instruction.
+- Blockers / manual checkpoint: none
 
 
 

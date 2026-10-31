@@ -1,25 +1,40 @@
 @import "tailwindcss";
 
+/* ── Design system tokens ──────────────────────────────────────────── */
 :root {
+  /* Core palette */
   --background: #ffffff;
-  --foreground: #0f172a; /* slate-900 */
+  --foreground: #0f172a;
   --card: #ffffff;
   --card-foreground: #0f172a;
   --popover: #ffffff;
   --popover-foreground: #0f172a;
-  --primary: #4f46e5; /* indigo-600 */
+
+  /* Primary – indigo */
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
   --primary-foreground: #ffffff;
-  --secondary: #f1f5f9; /* slate-100 */
+
+  /* Secondary / muted */
+  --secondary: #f1f5f9;
   --secondary-foreground: #0f172a;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b; /* slate-500 */
-  --accent: #eef2ff; /* indigo-50 */
-  --accent-foreground: #4338ca; /* indigo-700 */
-  --destructive: #ef4444; /* red-500 */
+  --muted: #f8fafc;
+  --muted-foreground: #64748b;
+
+  /* Accent */
+  --accent: #eef2ff;
+  --accent-foreground: #4338ca;
+
+  /* Destructive */
+  --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: #e2e8f0; /* slate-200 */
+
+  /* Borders & inputs */
+  --border: #e2e8f0;
   --input: #e2e8f0;
   --ring: #4f46e5;
+
+  /* Radius */
   --radius: 0.5rem;
 }
 
@@ -29,10 +44,88 @@
   --font-inter: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+/* ── Base reset ─────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background-color: #f8fafc;
   color: #0f172a;
   font-family: var(--font-inter), sans-serif;
+  font-feature-settings: "cv11", "salt";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   margin: 0;
   padding: 0;
+  min-height: 100vh;
+}
+
+/* ── Scrollbar styling ─────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ── Focus rings ───────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: 2px;
+}
+
+/* ── Utility animations ────────────────────────────────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-from-bottom {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-from-right {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+.animate-in {
+  animation: fade-in 0.15s ease-out both;
+}
+
+.slide-in-from-bottom-2 {
+  animation: slide-in-from-bottom 0.2s ease-out both;
+}
+
+.slide-in-from-right-4 {
+  animation: slide-in-from-right 0.2s ease-out both;
+}
+
+/* ── Print styles ─────────────────────────────────────────────────── */
+@media print {
+  body { background: white; }
+  .no-print { display: none !important; }
 }
