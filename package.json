@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
     "test:mail": "tsx scripts/test-mail.ts"
@@ -46,6 +47,8 @@
     "prisma": "6.19.3",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
   }
 }

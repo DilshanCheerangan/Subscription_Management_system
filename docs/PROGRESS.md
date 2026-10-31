@@ -3,8 +3,8 @@
 Agents: read this BEFORE every response. After every response append a new entry at the bottom of the LOG section and tick the checklist.
 
 ## Current status
-- Current phase: Phase 4 (Complete, ready for Phase 5: Billing and Invoices)
-- Last updated: 2026-10-31 12:12 IST
+- Current phase: Phase 5 (Complete, ready for Phase 6: Payments and Customer Portal)
+- Last updated: 2026-10-31 12:37 IST
 - Blockers: none
 - Waiting on user: none
 
@@ -41,10 +41,10 @@ Agents: read this BEFORE every response. After every response append a new entry
 - [x] State machine + stepper + history
 - [x] List with filters and pagination
 ### Phase 5: Billing and Invoices
-- [ ] Billing engine (idempotent, catch-up)
-- [ ] Discount auto-application
-- [ ] Invoice list/detail, confirm/cancel/send/print
-- [ ] Billing run UI + secured cron endpoint
+- [x] Billing engine (idempotent, catch-up)
+- [x] Discount auto-application
+- [x] Invoice list/detail, confirm/cancel/send/print
+- [x] Billing run UI + secured cron endpoint
 ### Phase 6: Payments and Portal
 - [ ] Record payments, auto-mark Paid
 - [ ] Paid/outstanding/overdue views
@@ -461,6 +461,72 @@ Agents: read this BEFORE every response. After every response append a new entry
   - `npm run build`: Production build succeeded in 626ms; 22 routes compiled with Partial Prerendering.
 - Next: Awaiting Phase 5: Billing and Invoices prompt.
 - Blockers / manual checkpoint: none
+
+[#16 | Phase 5 | 2026-10-31 12:37 IST]
+- Request: PHASE 5: Invoicing. Follow MASTER section 4 (Invoices + Idempotency) exactly.
+  1. lib/billing/generateInvoice.ts: customer snapshot, lines, taxes, auto-applied discounts, totals, dueDate from payment term, periodStart/periodEnd inside ONE transaction that also increments discount usedCount and advances subscription.nextInvoiceDate.
+  2. lib/billing/runBilling.ts: find ACTIVE subscriptions with nextInvoiceDate <= today (indexed query, batched), call generateInvoice per subscription catching errors individually, skip already-billed periods via unique constraint, catch up missed periods in order, return {created, skipped, failed[]}.
+  3. Discount engine lib/billing/discounts.ts: eligibility by date, minPurchase, minQuantity, usageLimit, scope; fixed or percentage; never below zero; pure functions with unit tests (vitest) for edge cases.
+  4. Tax engine unit tests too (rounding half-up at line level).
+  5. /admin/invoices: list with filters (status, overdue, customer, date range), pagination, badges. Detail page with lines, taxes, discounts, totals, payment history placeholder.
+  6. Actions with legal-state checks: Confirm, Cancel, Send (email PDF-less summary with link), Print (clean print stylesheet page with company header).
+  7. 'Run billing' button on an admin page showing a results summary dialog; secured GET/POST /api/cron/billing with Bearer CRON_SECRET.
+  8. Prove idempotency: run billing twice and show zero new invoices on the second run.
+- Done:
+  - Discount Engine (`lib/billing/discounts.ts`):
+    - Pure calculation function checking active status, date validity (`startDate <= refDate <= endDate`), usage limit (`usedCount < usageLimit`), minimum purchase and quantity thresholds.
+    - Scope handling: `PRODUCT` discounts apply to matching products first, `SUBSCRIPTION` discounts apply to resulting subtotal.
+    - Strictly enforces non-negative totals (subtotal - discount >= 0).
+  - Vitest Unit Test Suites (`test/billing-discounts.test.ts`, `test/tax-engine.test.ts`):
+    - 12 comprehensive unit tests covering date ranges, usage limits, percentage/fixed calculations, product-matching scopes, threshold enforcement, non-negative ceilings, floating-point drift elimination, and line-level half-up rounding (100% pass in 133ms).
+  - Invoice Generator (`lib/billing/generateInvoice.ts`):
+    - Builds complete invoice with snapshot metadata, line items, taxes, auto-applied discounts, and due dates derived from payment term schedules.
+    - Atomic write transaction: creates sequential number (`INV-XXXXX`), records `Invoice` and lines, updates discount `usedCount`, and advances `subscription.nextInvoiceDate`.
+    - Throws `AlreadyBilledError` on duplicate `(subscriptionId, periodStart)` to preserve database consistency.
+  - Billing Engine Runner (`lib/billing/runBilling.ts`):
+    - Closes expired auto-closing contracts first via `closeExpiredSubscriptions()`.
+    - Queries `ACTIVE` subscriptions due for invoicing (`nextInvoiceDate <= today`) using indexed query.
+    - Chronologically catches up missed periods, skipping already-billed cycles and isolating individual subscriber errors.
+  - Invoices UI Pages & Actions:
+    - List view (`app/(admin)/admin/invoices/page.tsx`): Filter by status (`DRAFT`, `CONFIRMED`, `PAID`, `CANCELLED`, derived `OVERDUE`), search, date ranges, pagination (20/page), status badges, and quick row actions.
+    - Detail view (`app/(admin)/admin/invoices/[id]/page.tsx` & `invoice-detail-client.tsx`): Comprehensive breakdown of lines, taxes, auto-applied discounts, payment history, and overdue notice banner.
+    - Printable Invoice (`app/(admin)/admin/invoices/[id]/print/page.tsx` & `print-invoice-client.tsx`): Company-branded tax invoice with print stylesheet (`@media print`) and PDF save action.
+    - Actions (`app/actions/invoices.ts`): Confirm, Cancel (guarded against paid invoices), and Send (emails customer with summary and direct link via `sendInvoiceSummaryEmail`).
+  - Billing Run Dashboard & Cron Endpoint:
+    - Admin UI (`app/(admin)/admin/billing-run/page.tsx`): On-demand execution button with animated feedback, live results dialog showing Created/Skipped/Closed/Failed counts, architecture guarantees, and cron documentation.
+    - Secured API Route (`app/api/cron/billing/route.ts`): Accepts `GET` and `POST` authenticated with `Bearer CRON_SECRET`.
+  - Idempotency & Catch-Up Verification (`scripts/test-billing-engine.ts`):
+    - Test created active subscription with 3 missed daily periods.
+    - Run 1 generated 3 sequential invoices (`INV-00011`, `INV-00012`, `INV-00013`), applied discounts, and advanced `nextInvoiceDate`.
+    - Run 2 executed immediately with same target date: **Created: 0, Skipped: 0, Failures: 0** (proven 100% idempotent).
+- Files touched:
+  - lib/billing/discounts.ts
+  - lib/billing/generateInvoice.ts
+  - lib/billing/runBilling.ts
+  - lib/mail.ts
+  - test/billing-discounts.test.ts
+  - test/tax-engine.test.ts
+  - vitest.config.mjs
+  - app/actions/invoices.ts
+  - app/api/cron/billing/route.ts
+  - app/(admin)/admin/invoices/page.tsx
+  - app/(admin)/admin/invoices/[id]/page.tsx
+  - app/(admin)/admin/invoices/[id]/invoice-detail-client.tsx
+  - app/(admin)/admin/invoices/[id]/print/page.tsx
+  - app/(admin)/admin/invoices/[id]/print/print-invoice-client.tsx
+  - app/(admin)/admin/billing-run/page.tsx
+  - components/layout/sidebar.tsx
+  - scripts/test-billing-engine.ts
+  - docs/PROGRESS.md
+- Verification:
+  - `npm test`: 12/12 unit tests passed (tax engine + discount engine).
+  - `npm run typecheck`: 0 errors.
+  - `npm run lint`: 0 problems (0 errors, 0 warnings).
+  - `npx tsx scripts/test-billing-engine.ts`: Verified 3 catch-up invoices, auto-discounts, date advancement, and **0 new invoices on Run 2 (Idempotency Proven)**.
+  - `npm run build`: Production build succeeded in 1.7s (all 27 routes compiled cleanly with Partial Prerendering).
+- Next: Awaiting Phase 6: Payments and Customer Portal prompt.
+- Blockers / manual checkpoint: none
+
 
 
 

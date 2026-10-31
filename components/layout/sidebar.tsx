@@ -42,7 +42,7 @@ const navItems: NavItem[] = [
   { label: "Dashboard", href: "/", icon: LayoutDashboard, roles: ["ADMIN", "STAFF"] },
   { label: "Quotations", href: "/admin/subscriptions?status=QUOTATION", icon: FileText, roles: ["ADMIN", "STAFF"] },
   { label: "Subscriptions", href: "/admin/subscriptions", icon: Repeat, roles: ["ADMIN", "STAFF"] },
-  { label: "Invoices", href: "/invoices", icon: Receipt, roles: ["ADMIN", "STAFF"] },
+  { label: "Invoices", href: "/admin/invoices", icon: Receipt, roles: ["ADMIN", "STAFF"] },
   { label: "Payments", href: "/payments", icon: Wallet, roles: ["ADMIN", "STAFF"] },
   { label: "Customers", href: "/customers", icon: Users, roles: ["ADMIN", "STAFF"] },
   
