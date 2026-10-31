@@ -233,4 +233,20 @@ Agents: read this BEFORE every response. After every response append a new entry
   - docs/PROGRESS.md
 - Verification: `npm run lint`, `npm run typecheck`, and `npm run build` passed with zero errors. `npm run db:seed` completed cleanly with exit code 0.
 - Next: Awaiting Phase 2: Catalog prompt (Products, Variants, Plans, Flags).
-- Blockers / manual checkpoint: none
+- Blockers / manual checkpoint: none
+
+[#9 | Phase 1 | 2026-10-31 10:53 IST]
+- Request: How to verify if Mailtrap is working.
+- Done:
+  - Created `scripts/test-mail.ts` diagnostic verification script that verifies SMTP credentials via `transporter.verify()` and dispatches a test message.
+  - Added `npm run test:mail` script to `package.json`.
+  - Documented two testing approaches: (1) CLI via `npm run test:mail`, and (2) App UI via `/forgot-password` flow.
+  - Verified `npm run lint` (0 errors) and `npm run typecheck` (0 errors).
+- Files touched:
+  - scripts/test-mail.ts
+  - package.json
+  - docs/PROGRESS.md
+- Verification: `npm run test:mail` runs properly and validates environment variable presence; `npm run lint` and `npm run typecheck` pass with 0 errors.
+- Next: Awaiting Phase 2: Catalog prompt (Products, Variants, Plans, Flags).
+- Blockers / manual checkpoint: none
+

@@ -9,7 +9,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "db:migrate": "prisma migrate dev",
-    "db:seed": "prisma db seed"
+    "db:seed": "prisma db seed",
+    "test:mail": "tsx scripts/test-mail.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
