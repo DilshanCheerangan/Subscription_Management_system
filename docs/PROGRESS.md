@@ -323,6 +323,21 @@ Agents: read this BEFORE every response. After every response append a new entry
 - Next: Awaiting Phase 3: Taxes, Discounts, Templates prompt.
 - Blockers / manual checkpoint: none
 
+[#13 | Git Guidance | 2026-10-31 11:26 IST]
+- Request: How to configure and attribute Git commits to teammate collaborator credentials.
+- Done:
+  - Documented methods for:
+    1. Setting repository-level author name and email (`git config user.name` / `user.email`).
+    2. Overriding author on specific commits (`--author`).
+    3. Adding GitHub co-author trailers (`Co-authored-by:`).
+    4. Updating remote authentication token for pushes.
+- Files touched:
+  - docs/PROGRESS.md
+- Verification: Guidance provided.
+- Next: Awaiting Phase 3: Taxes, Discounts, Templates prompt.
+- Blockers / manual checkpoint: none
+
+
 
 
 
