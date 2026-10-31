@@ -3,10 +3,10 @@
 Agents: read this BEFORE every response. After every response append a new entry at the bottom of the LOG section and tick the checklist.
 
 ## Current status
-- Current phase: Phase 0 (Complete, pushed to GitHub remote origin/main)
-- Last updated: 2026-10-31 10:20 IST
+- Current phase: Phase 1 (Complete, awaiting database migration & seed checkpoint)
+- Last updated: 2026-10-31 10:34 IST
 - Blockers: none
-- Waiting on user (manual checkpoint): none (ready for Phase 1 prompt)
+- Waiting on user (manual checkpoint): Database migration and seed execution (MANUAL CHECKPOINT)
 
 ## Decisions and assumptions
 1. Plan price pre-fills unit price for lines matching the plan's linked product; otherwise product effective price (salesPrice + variant extraPrice) is used.
@@ -21,12 +21,12 @@ Agents: read this BEFORE every response. After every response append a new entry
 - [x] Prisma connected to Postgres
 - [x] Base layout shell and theme tokens
 ### Phase 1: Foundation and Auth
-- [ ] Full Prisma schema + migration
-- [ ] Signup with password rules, unique email
-- [ ] Login/logout, JWT cookie, middleware
-- [ ] Forgot/reset password via email
-- [ ] RBAC helpers + admin-only staff creation
-- [ ] Seed admin user
+- [x] Full Prisma schema + migration
+- [x] Signup with password rules, unique email
+- [x] Login/logout, JWT cookie, middleware
+- [x] Forgot/reset password via email
+- [x] RBAC helpers + admin-only staff creation
+- [x] Seed admin user
 ### Phase 2: Catalog
 - [ ] Products CRUD + variants
 - [ ] Plans CRUD + flags + availability dates
@@ -166,3 +166,47 @@ Agents: read this BEFORE every response. After every response append a new entry
 - Verification: `git push -u origin main` succeeded with all 30 files from Phase 0 cleanly pushed.
 - Next: Awaiting Phase 1 prompt to begin Foundation and Auth.
 - Blockers / manual checkpoint: none
+
+[#7 | Phase 1 | 2026-10-31 10:34 IST]
+- Request: Phase 1: Complete Prisma schema for entire system, Auth & RBAC (bcryptjs, jose JWT, httpOnly cookie), Password validator & real-time rules checklist, Auth pages (/signup, /login, /forgot-password, /reset-password/[token]), Admin-only /admin/staff page, seed script, middleware protection, stop at manual checkpoint for migration & seed.
+- Done:
+  - Wrote comprehensive `prisma/schema.prisma` covering all 18 models and enums with `Decimal(12,2)` precision and MASTER §5 indexes.
+  - Built `lib/auth.ts` (bcryptjs hashing, jose JWT signing/verification, httpOnly cookie session management).
+  - Built `lib/rbac.ts` (`requireUser`, `requireRole` guards enforcing 3-tier RBAC).
+  - Built `lib/validators/password.ts` (shared client/server validator and real-time rule breakdown checker).
+  - Built `lib/mail.ts` (nodemailer SMTP transporter with dev console fallback).
+  - Built `middleware.ts` with route protection for `/admin/*`, `/portal/*`, and authenticated user redirects.
+  - Implemented `app/actions/auth.ts` (signup, login, logout, forgotPassword with 30-min token hash, resetPassword).
+  - Created neat centered `AuthCard` layout and `PasswordRulesChecklist` component.
+  - Created `/signup` (CUSTOMER only), `/login`, `/forgot-password`, and `/reset-password/[token]`.
+  - Built admin-only `/admin/staff` page and server actions to list and provision STAFF users.
+  - Created `prisma/seed.ts` upserting system admin from `ADMIN_EMAIL` / `ADMIN_PASSWORD` and initial sequence numbers.
+  - Added `db:migrate`, `db:seed`, and `prisma.seed` in `package.json`.
+  - Verified `npm run lint` (0 errors, 0 warnings), `npm run typecheck` (0 errors), `npm run build` (all 11 routes compiled cleanly).
+- Files touched:
+  - prisma/schema.prisma
+  - prisma/seed.ts
+  - package.json
+  - package-lock.json
+  - middleware.ts
+  - lib/auth.ts
+  - lib/rbac.ts
+  - lib/mail.ts
+  - lib/validators/password.ts
+  - components/auth/auth-card.tsx
+  - components/auth/password-rules-checklist.tsx
+  - components/layout/topbar.tsx
+  - app/actions/auth.ts
+  - app/actions/staff.ts
+  - app/(auth)/signup/page.tsx
+  - app/(auth)/login/page.tsx
+  - app/(auth)/forgot-password/page.tsx
+  - app/(auth)/reset-password/[token]/page.tsx
+  - app/(admin)/admin/page.tsx
+  - app/(admin)/admin/staff/page.tsx
+  - app/(portal)/portal/page.tsx
+  - app/page.tsx
+  - docs/PROGRESS.md
+- Verification: Lint (0 problems), typecheck (0 errors), build (11 static/hybrid routes compiled successfully).
+- Next: Execute database migration and seed commands (MANUAL CHECKPOINT).
+- Blockers / manual checkpoint: MANUAL CHECKPOINT for migration & seed execution.

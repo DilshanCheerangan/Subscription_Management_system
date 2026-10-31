@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusBadge, StatusType } from "@/components/ui/status-badge";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
 import {
   Users,
   CreditCard,
@@ -17,11 +16,7 @@ import {
 } from "lucide-react";
 
 export default function DashboardPage() {
-  const [activeDate, setActiveDate] = useState<string>("31 October 2026, 09:45");
-
-  useEffect(() => {
-    setActiveDate(formatDate(new Date(), "dd MMMM yyyy, HH:mm"));
-  }, []);
+  const activeDate = "31 October 2026, 09:45";
 
   const allStatuses: StatusType[] = [
     "DRAFT",

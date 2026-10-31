@@ -1,7 +1,9 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Search, Bell, LogOut, UserCheck } from "lucide-react";
 import { UserRole } from "./sidebar";
+import { logoutAction } from "@/app/actions/auth";
 
 interface TopbarProps {
   role?: UserRole;
@@ -10,6 +12,17 @@ interface TopbarProps {
 }
 
 export function Topbar({ role = "ADMIN", userName = "Admin User", onLogout }: TopbarProps) {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    if (onLogout) {
+      onLogout();
+    } else {
+      await logoutAction();
+      router.push("/login");
+      router.refresh();
+    }
+  };
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-200/90 bg-white/95 px-6 backdrop-blur-md">
       {/* Search Input Bar */}
@@ -44,7 +57,7 @@ export function Topbar({ role = "ADMIN", userName = "Admin User", onLogout }: To
 
         <button
           type="button"
-          onClick={onLogout}
+          onClick={handleLogout}
           className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
         >
           <LogOut className="h-3.5 w-3.5 text-slate-500" />
