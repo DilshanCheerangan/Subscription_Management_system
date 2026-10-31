@@ -3,10 +3,10 @@
 Agents: read this BEFORE every response. After every response append a new entry at the bottom of the LOG section and tick the checklist.
 
 ## Current status
-- Current phase: Phase 1 (Complete, awaiting database migration & seed checkpoint)
-- Last updated: 2026-10-31 10:34 IST
+- Current phase: Phase 3 (Complete, ready for Phase 4: Subscriptions)
+- Last updated: 2026-10-31 11:48 IST
 - Blockers: none
-- Waiting on user (manual checkpoint): Database migration and seed execution (MANUAL CHECKPOINT)
+- Waiting on user: none
 
 ## Decisions and assumptions
 1. Plan price pre-fills unit price for lines matching the plan's linked product; otherwise product effective price (salesPrice + variant extraPrice) is used.
@@ -31,10 +31,10 @@ Agents: read this BEFORE every response. After every response append a new entry
 - [x] Products CRUD + variants
 - [x] Plans CRUD + flags + availability dates
 ### Phase 3: Taxes, Discounts, Templates
-- [ ] Tax rules CRUD
-- [ ] Payment terms CRUD
-- [ ] Discount rules CRUD (admin only)
-- [ ] Quotation templates CRUD
+- [x] Tax rules CRUD
+- [x] Payment terms CRUD
+- [x] Discount rules CRUD (admin only)
+- [x] Quotation templates CRUD
 ### Phase 4: Subscriptions
 - [ ] Create from scratch and from template
 - [ ] Lines with tax/price calc
@@ -336,6 +336,64 @@ Agents: read this BEFORE every response. After every response append a new entry
 - Verification: Guidance provided.
 - Next: Awaiting Phase 3: Taxes, Discounts, Templates prompt.
 - Blockers / manual checkpoint: none
+
+[#14 | Phase 3 | 2026-10-31 11:48 IST]
+- Request: PHASE 3: Configuration entities (ADMIN only) - Taxes, Payment Terms, Discounts (with live status badges & zod rules), Quotation Templates (with lines & Duplicate action), and seed demo data in prisma/seed.ts.
+- Done:
+  - Validations (`lib/validators/config.ts`):
+    - `taxSchema`: name, percentage (0-100), fixedAmount, active.
+    - `paymentTermSchema`: name, days (0=Immediate), active.
+    - `discountSchema`: type (FIXED/PERCENTAGE), value, minPurchase, minQuantity, dates, usageLimit, scope (PRODUCT/SUBSCRIPTION), productIds; refined for percentage <= 100, endDate > startDate, productIds selection.
+    - `quotationTemplateSchema` + lines: name, validityDays, planId, lines with product, variant, quantity, unitPrice, taxId.
+  - Discount status helper (`lib/discounts.ts`) & Badge (`components/config/discount-status-badge.tsx`):
+    - Derives `Scheduled`, `Active`, `Expired`, `Exhausted`, or `Inactive` with color-coded status badges.
+  - Server Actions:
+    - `app/actions/taxes.ts`: getTaxesAction, createTaxAction, updateTaxAction, toggleTaxActiveAction, deleteTaxAction (with reference checks).
+    - `app/actions/payment-terms.ts`: getPaymentTermsAction, createPaymentTermAction, updatePaymentTermAction, togglePaymentTermActiveAction, deletePaymentTermAction (with subscription reference check).
+    - `app/actions/discounts.ts`: getDiscountsAction, createDiscountAction, updateDiscountAction, toggleDiscountActiveAction, deleteDiscountAction (with invoice discount check).
+    - `app/actions/quotation-templates.ts`: getQuotationTemplatesAction, createQuotationTemplateAction, updateQuotationTemplateAction, deleteQuotationTemplateAction, duplicateQuotationTemplateAction (copies lines with "(Copy)" suffix), getTemplateMetadataAction.
+    - All mutations strictly guarded with `requireRole(["ADMIN"])`.
+  - UI Pages & Form Sheets:
+    - `/admin/taxes`: Data table with search, active filter, slide-over sheet (`TaxFormSheet`), role-aware read-only mode for STAFF.
+    - `/admin/payment-terms`: Data table with dueDays schedules (Immediate=0, 15 Days, 30 Days), slide-over sheet (`PaymentTermFormSheet`), read-only for STAFF.
+    - `/admin/discounts`: Data table with type, scope, validity dates, read-only usedCount/limit, live status badges, product multi-select in `DiscountFormSheet`, read-only for STAFF.
+    - `/admin/quotation-templates`: Data table with linked plan, validity days, included items preview, `QuotationTemplateFormSheet` with dynamic line builder, and working **Duplicate (Copy)** action.
+    - Sidebar (`components/layout/sidebar.tsx`): Added direct links to Taxes, Payment Terms, Discounts, and Templates.
+  - Seed Demo Data (`prisma/seed.ts`):
+    - 3 Products ("BrightERP Cloud Core", "Dedicated Cloud Server Node", "Priority Implementation & Consulting") with Odoo brand variant (`+560`).
+    - 4 Plans across all billing periods (`DAILY`, `WEEKLY`, `MONTHLY`, `YEARLY`) with availability dates and switches.
+    - Standard Taxes: `GST 18%` and `GST 5%`.
+    - Payment Terms: `Immediate`, `15 Days`, `30 Days`.
+    - 2 Discounts: `WELCOME15` (15% Subscription), `ODOOPROMO500` (₹500 Product-level).
+    - 2 Quotation Templates: "SaaS Professional Onboarding Package" and "Enterprise Cloud Infrastructure Bundle".
+    - Executed seed script with exit code 0. Verified database counts: 2 taxes, 3 payment terms, 4 products, 8 variants, 5 plans, 2 discounts, 2 templates with 5 lines.
+  - Verification:
+    - `npm run lint`: 0 errors, 0 warnings.
+    - `npm run typecheck`: 0 errors.
+    - `npm run build`: Production build succeeded in 1.1s (all 18 routes compiled cleanly).
+- Files touched:
+  - lib/validators/config.ts
+  - lib/discounts.ts
+  - components/config/discount-status-badge.tsx
+  - components/config/tax-form-sheet.tsx
+  - components/config/payment-term-form-sheet.tsx
+  - components/config/discount-form-sheet.tsx
+  - components/config/quotation-template-form-sheet.tsx
+  - app/actions/taxes.ts
+  - app/actions/payment-terms.ts
+  - app/actions/discounts.ts
+  - app/actions/quotation-templates.ts
+  - app/(admin)/admin/taxes/page.tsx
+  - app/(admin)/admin/payment-terms/page.tsx
+  - app/(admin)/admin/discounts/page.tsx
+  - app/(admin)/admin/quotation-templates/page.tsx
+  - components/layout/sidebar.tsx
+  - prisma/seed.ts
+  - docs/PROGRESS.md
+- Verification: Lint (0 problems), typecheck (0 errors), build (18 routes compiled successfully).
+- Next: Awaiting Phase 4: Subscriptions prompt.
+- Blockers / manual checkpoint: none
+
 
 
 

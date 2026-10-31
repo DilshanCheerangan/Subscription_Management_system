@@ -48,7 +48,10 @@ const navItems: NavItem[] = [
   // Catalog & Configuration
   { label: "Products", href: "/admin/products", icon: Package, roles: ["ADMIN", "STAFF"] },
   { label: "Plans", href: "/admin/plans", icon: Layers, roles: ["ADMIN", "STAFF"] },
-  { label: "Taxes & Discounts", href: "/admin/rules", icon: Percent, roles: ["ADMIN"] },
+  { label: "Templates", href: "/admin/quotation-templates", icon: FileText, roles: ["ADMIN", "STAFF"] },
+  { label: "Taxes", href: "/admin/taxes", icon: Receipt, roles: ["ADMIN", "STAFF"] },
+  { label: "Payment Terms", href: "/admin/payment-terms", icon: CreditCard, roles: ["ADMIN", "STAFF"] },
+  { label: "Discounts", href: "/admin/discounts", icon: Percent, roles: ["ADMIN", "STAFF"] },
   { label: "Billing Engine", href: "/admin/billing-run", icon: PlayCircle, roles: ["ADMIN", "STAFF"] },
   { label: "Reports & MRR", href: "/admin/reports", icon: BarChart3, roles: ["ADMIN", "STAFF"] },
   { label: "Staff Access", href: "/admin/staff", icon: ShieldCheck, roles: ["ADMIN"] },
