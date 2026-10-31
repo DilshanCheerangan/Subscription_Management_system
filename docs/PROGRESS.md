@@ -210,3 +210,27 @@ Agents: read this BEFORE every response. After every response append a new entry
 - Verification: Lint (0 problems), typecheck (0 errors), build (11 static/hybrid routes compiled successfully).
 - Next: Execute database migration and seed commands (MANUAL CHECKPOINT).
 - Blockers / manual checkpoint: MANUAL CHECKPOINT for migration & seed execution.
+
+[#8 | Phase 1 | 2026-10-31 10:44 IST]
+- Request: Resolve seed error "Environment variable not found: DATABASE_URL".
+- Done:
+  - Diagnosed that Prisma CLI requires `.env` or explicit dotenv loading, which was missing when the user ran `npm run db:seed` in their terminal.
+  - Added explicit `dotenv` loading to `prisma/seed.ts` (loading `.env.local` then `.env`).
+  - Synchronized `.env` from `.env.local` (both protected by `.env*` in `.gitignore`).
+  - Corrected `package.json` scripts: `db:migrate` to `prisma migrate dev` and `db:seed` to `prisma db seed`.
+  - Applied migration `20261031050938_init_system_schema` to Supabase PostgreSQL database.
+  - Executed `npm run db:seed` successfully:
+    - Upserted System Admin: `admin@brightloop.test` (role: `ADMIN`, password: `Admin@12345`).
+    - Seeded sequential number counters for `SUBSCRIPTION` (SUB-00001) and `INVOICE` (INV-00001).
+    - Seeded default Payment Terms (`Immediate`, `15 Days`, `30 Days`).
+  - Verified database state via Prisma Client: Admin password verification against `Admin@12345` returned `true`.
+  - Re-ran and verified: `npm run lint` (0 errors), `npm run typecheck` (0 errors), `npm run build` (11 routes compiled cleanly).
+- Files touched:
+  - package.json
+  - package-lock.json
+  - prisma/seed.ts
+  - prisma/migrations/20261031050938_init_system_schema/migration.sql
+  - docs/PROGRESS.md
+- Verification: `npm run lint`, `npm run typecheck`, and `npm run build` passed with zero errors. `npm run db:seed` completed cleanly with exit code 0.
+- Next: Awaiting Phase 2: Catalog prompt (Products, Variants, Plans, Flags).
+- Blockers / manual checkpoint: none
