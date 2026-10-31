@@ -11,6 +11,7 @@
     "test": "vitest run",
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
+    "db:seed:perf": "tsx prisma/seed-perf.ts",
     "test:mail": "tsx scripts/test-mail.ts"
   },
   "prisma": {

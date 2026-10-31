@@ -112,6 +112,7 @@ model Product {
   discounts              Discount[]              @relation("DiscountProducts")
 
   @@index([active])
+  @@index([createdAt])
 }
 
 model ProductVariant {
@@ -153,6 +154,7 @@ model Plan {
   quotationTemplates QuotationTemplate[]
 
   @@index([active])
+  @@index([createdAt])
 }
 
 model Tax {
@@ -200,6 +202,7 @@ model Discount {
   invoiceDiscounts InvoiceDiscount[]
 
   @@index([active])
+  @@index([createdAt])
 }
 
 model QuotationTemplate {
@@ -212,6 +215,8 @@ model QuotationTemplate {
   updatedAt    DateTime @updatedAt
 
   lines QuotationTemplateLine[]
+
+  @@index([createdAt])
 }
 
 model QuotationTemplateLine {
@@ -254,6 +259,7 @@ model Subscription {
   @@index([status, customerId, nextInvoiceDate])
   @@index([customerId])
   @@index([planId])
+  @@index([createdAt])
 }
 
 model SubscriptionLine {
@@ -314,9 +320,11 @@ model Invoice {
 
   @@unique([subscriptionId, periodStart])
   @@index([status, dueDate, customerId, subscriptionId])
+  @@index([status, dueDate])
   @@index([customerId])
   @@index([subscriptionId])
   @@index([dueDate])
+  @@index([createdAt])
 }
 
 model InvoiceLine {
@@ -363,6 +371,7 @@ model Payment {
 
   @@index([invoiceId, paymentDate])
   @@index([paymentDate])
+  @@index([createdAt])
 }
 
 model NumberSequence {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Search, Bell, LogOut, UserCheck } from "lucide-react";
+import { Search, Bell, LogOut, UserCheck, Menu } from "lucide-react";
 import { UserRole } from "./sidebar";
 import { logoutAction } from "@/app/actions/auth";
 
@@ -9,9 +9,10 @@ interface TopbarProps {
   role?: UserRole;
   userName?: string;
   onLogout?: () => void;
+  onToggleMobileMenu?: () => void;
 }
 
-export function Topbar({ role = "ADMIN", userName = "Admin User", onLogout }: TopbarProps) {
+export function Topbar({ role = "ADMIN", userName = "Admin User", onLogout, onToggleMobileMenu }: TopbarProps) {
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -24,9 +25,19 @@ export function Topbar({ role = "ADMIN", userName = "Admin User", onLogout }: To
     }
   };
   return (
-    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-200/90 bg-white/95 px-6 backdrop-blur-md">
-      {/* Search Input Bar */}
-      <div className="flex w-full max-w-md items-center">
+    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-200/90 bg-white/95 px-4 sm:px-6 backdrop-blur-md">
+      {/* Mobile Menu Button + Search Input Bar */}
+      <div className="flex w-full max-w-md items-center gap-3">
+        {onToggleMobileMenu && (
+          <button
+            type="button"
+            onClick={onToggleMobileMenu}
+            aria-label="Toggle mobile menu"
+            className="md:hidden rounded-lg p-2 text-slate-500 hover:bg-slate-100 transition-colors"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        )}
         <div className="relative w-full">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input

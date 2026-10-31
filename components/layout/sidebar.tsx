@@ -27,6 +27,7 @@ interface SidebarProps {
   role?: UserRole;
   userName?: string;
   userEmail?: string;
+  onNavigate?: () => void;
 }
 
 interface NavItem {
@@ -63,7 +64,7 @@ const navItems: NavItem[] = [
   { label: "Payment History", href: "/portal/payments", icon: CreditCard, roles: ["CUSTOMER"] },
 ];
 
-function SidebarNav({ items }: { items: NavItem[] }) {
+function SidebarNav({ items, onNavigate }: { items: NavItem[]; onNavigate?: () => void }) {
   const pathname = usePathname();
 
   return (
@@ -76,6 +77,7 @@ function SidebarNav({ items }: { items: NavItem[] }) {
           <Link
             key={item.href}
             href={item.href}
+            onClick={() => onNavigate?.()}
             className={cn(
               "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150",
               isActive
@@ -121,11 +123,16 @@ function SidebarNavFallback({ items }: { items: NavItem[] }) {
   );
 }
 
-export function Sidebar({ role = "ADMIN", userName = "Admin User", userEmail = "admin@brightloop.test" }: SidebarProps) {
+export function Sidebar({
+  role = "ADMIN",
+  userName = "Admin User",
+  userEmail = "admin@brightloop.test",
+  onNavigate,
+}: SidebarProps) {
   const visibleItems = navItems.filter((item) => item.roles.includes(role));
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-slate-200/90 bg-white shadow-xs">
+    <aside className="h-full flex w-full md:w-64 flex-col border-r border-slate-200/90 bg-white shadow-xs">
       {/* Brand Header */}
       <div className="flex h-16 items-center gap-3 border-b border-slate-200/80 px-6">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-500/20">
@@ -148,7 +155,7 @@ export function Sidebar({ role = "ADMIN", userName = "Admin User", userEmail = "
           {role === "CUSTOMER" ? "Customer Portal" : "Operations"}
         </div>
         <Suspense fallback={<SidebarNavFallback items={visibleItems} />}>
-          <SidebarNav items={visibleItems} />
+          <SidebarNav items={visibleItems} onNavigate={onNavigate} />
         </Suspense>
       </div>
 
