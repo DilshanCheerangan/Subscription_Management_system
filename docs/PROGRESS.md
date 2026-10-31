@@ -249,4 +249,21 @@ Agents: read this BEFORE every response. After every response append a new entry
 - Verification: `npm run test:mail` runs properly and validates environment variable presence; `npm run lint` and `npm run typecheck` pass with 0 errors.
 - Next: Awaiting Phase 2: Catalog prompt (Products, Variants, Plans, Flags).
 - Blockers / manual checkpoint: none
+
+[#10 | Phase 1 | 2026-10-31 10:57 IST]
+- Request: Resolve error in `npm run test:mail` indicating missing SMTP credentials.
+- Done:
+  - Identified that Mailtrap credentials were added to `.env`, but `.env.local` still contained empty SMTP variables (`""`).
+  - Next.js and `dotenv` prioritize `.env.local` over `.env`, causing empty strings to mask the credentials in `.env`.
+  - Synchronized the Mailtrap SMTP credentials from `.env` into `.env.local`.
+  - Ran `npm run test:mail` and confirmed:
+    - Connection to `sandbox.smtp.mailtrap.io:2525` verified successfully.
+    - Test email delivered to Mailtrap with Message ID `<a43ad6c6-c20a-5ad0-0b10-3d152962bae4@brightloop.test>`.
+  - Verified `npm run lint` (0 errors), `npm run typecheck` (0 errors), and confirmed `.env*` remains strictly gitignored.
+- Files touched:
+  - docs/PROGRESS.md
+- Verification: `npm run test:mail` returned exit code 0; test email visible in Mailtrap inbox.
+- Next: Awaiting Phase 2: Catalog prompt (Products, Variants, Plans, Flags).
+- Blockers / manual checkpoint: none
+
 
